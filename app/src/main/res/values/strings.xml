@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">InmobiliariaCP</string>
+    <string name="title_activity_principal">Principal</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Ajustes</string>
+    <string name="anadir">Nuevo inmueble</string>
+    <string name="title_activity_secundaria">Secundaria</string>
+    <string name="title_activity_editar">Editar</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="no_fotos">No hay fotos para mostrar</string>
+    <string name="usuario">Introduzca nombre de usuario</string>
+    <string name="bt_aceptar">Aceptar</string>
+    <string name="bt_cancelar">Cancelar</string>
+    <string name="hintlocalidad">Localidad</string>
+    <string name="hintdireccion">Direccion</string>
+    <string name="hinttipo">Tipo</string>
+    <string name="hintprecio">Precio</string>
+    <string name="nuevoinmueble">Nuevo inmueble</string>
+    <string name="btanadir">Añadir</string>
+    <string name="inm_ex">El inmueble ya existe</string>
+    <string name="campos_vacios">Debe rellenar todos los campos</string>
+    <string name="dialog_message">¿Está seguro de que desea borrar el inmueble y todas sus fotos?</string>
+    <string name="dialog_title">Borrar inmueble</string>
+    <string name="si">Si</string>
+    <string name="no">No</string>
+    <string name="inm_mod">Inmueble modificado</string>
+    <string name="inm_del">Inmueble borrado</string>
+    <string name="formato">yyyyMMdd_HHmmss</string>
+    <string name="extension">.jpg</string>
+    <string name="path">file:</string>
+    <string name="inm">inmueble_</string>
+    <string name="tag_posicion">posicion</string>
+    <string name="tag_id">id</string>
+    <string name="tag_localidad">localidad</string>
+    <string name="tag_direccion">direccion</string>
+    <string name="tag_tipo">tipo</string>
+    <string name="tag_precio">precio</string>
+    <string name="tag_usuario">usuario</string>
+
+</resources>
