@@ -71,7 +71,6 @@ public class Lista extends Fragment implements LoaderManager.LoaderCallbacks<Cur
                     String where = Contrato.TablaInmueble._ID + " = ?";
                     String[] args = new String[]{id+""};
                     getActivity().getContentResolver().update(uri, values, where, args);
-                    ad.notifyDataSetChanged();
                     Toast.makeText(getActivity(),getString(R.string.inm_mod), Toast.LENGTH_SHORT).show();
                     break;
                 }
@@ -176,7 +175,6 @@ public class Lista extends Fragment implements LoaderManager.LoaderCallbacks<Cur
                 String where = Contrato.TablaInmueble._ID + " = ?";
                 String[] args = new String[]{idInmueble+""};
                 getActivity().getContentResolver().delete(uri, where, args);
-                ad.notifyDataSetChanged();
                 Toast.makeText(getActivity(), getString(R.string.inm_del), Toast.LENGTH_SHORT).show();
             }
         });
