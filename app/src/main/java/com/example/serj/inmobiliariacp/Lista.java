@@ -4,12 +4,15 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.LoaderManager;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Environment;
@@ -25,7 +28,22 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
 
 public class Lista extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 
@@ -107,6 +125,20 @@ public class Lista extends Fragment implements LoaderManager.LoaderCallbacks<Cur
             cursor.moveToPosition(posicion);
             int idInmueble = cursor.getInt(0);
             return borrar(idInmueble);
+        }else if(id == R.id.opSubir) {
+            if(cursor.getInt(5) == 0){
+                cursor.moveToPosition(posicion);
+                Inmueble i = new Inmueble(cursor.getInt(0),
+                        cursor.getString(1),
+                        cursor.getString(2),
+                        cursor.getString(3),
+                        cursor.getInt(4),
+                        0);
+                return subir(i);
+            } else {
+                Toast.makeText(getActivity(),getString(R.string.inm_sync), Toast.LENGTH_SHORT).show();
+            }
+
         }
         return super.onContextItemSelected(item);
     }
@@ -210,6 +242,28 @@ public class Lista extends Fragment implements LoaderManager.LoaderCallbacks<Cur
         return true;
     }
 
+    private ArrayList<String> getFotos(String id){
+        File[] allPhotos = getActivity().getExternalFilesDir(Environment.DIRECTORY_DCIM).listFiles();
+        ArrayList<String> fotos = new ArrayList<String>();
+        for(int i=0; i<allPhotos.length; i++){
+            String photoId = allPhotos[i].getPath();
+            if(photoId.contains(getString(R.string.inm)+ id + "_")){
+                fotos.add(photoId);
+            }
+        }
+        return fotos;
+    }
+
+    public boolean subir(Inmueble inmueble){
+        new Upload().execute(inmueble);
+        return true;
+    }
+
+    private String getUsuarioSharedPreferences() {
+        SharedPreferences sp = getActivity().getSharedPreferences(getString(R.string.tag_usuario), Context.MODE_PRIVATE);
+        return sp.getString(getString(R.string.tag_usuario), "");
+    }
+
     // LOADER
 
     @Override
@@ -238,4 +292,111 @@ public class Lista extends Fragment implements LoaderManager.LoaderCallbacks<Cur
         this.escuchador = escuchador;
     }
 
+    // SUBIR A HIBERNATE
+
+    class Upload extends AsyncTask<Inmueble, Void, String> {
+
+        private final String BASE_SERVIDOR = "http://192.168.1.16:8080/InmobiliariaHibernate/";
+        private final String control = "control?target=inmueble&op=insert&action=opa";
+        private final String controlsubir = "controlsubir?redirect=false";
+        private ArrayList<String> archivos = new ArrayList<String>();
+        private String archivoASubir = null;
+
+
+        @Override
+        protected String doInBackground(Inmueble... params) {
+            String inmueble = params[0].getInmueble(getUsuarioSharedPreferences());
+            String id = String.valueOf(params[0].getId());
+            String respuesta = "";
+            // Actualizar subido = 1
+            ContentValues values = new ContentValues();
+            values.put(Contrato.TablaInmueble.SUBIDO, 1);
+            String where = Contrato.TablaInmueble._ID + " = ?";
+            String[] args = new String[]{id};
+            getActivity().getContentResolver().update(uri, values, where, args);
+            // Añadir inmueble + usuario
+            String idInsertado = post(BASE_SERVIDOR + control, inmueble).trim();
+            // Coger todas las fotos de ese inmueble y subirlas
+            archivos = getFotos(id);
+            for (String archivo : archivos){
+                archivoASubir = archivo;
+                respuesta = postFile(BASE_SERVIDOR + controlsubir, "archivo", archivoASubir, idInsertado);
+            }
+            return respuesta.trim();
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            Log.v("RESPUESTA:", s);
+            if(s.equals("1")) {
+                Toast.makeText(getActivity(), "Subida correcta", Toast.LENGTH_SHORT).show();
+            } else if(s.equals("0")) {
+                Toast.makeText(getActivity(), "Subida erronea", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        private String post(String url, String inmueble){
+            try {
+                //Conexión post
+                URL peticion = new URL(url);
+                URLConnection conexion = peticion.openConnection();
+                conexion.setDoOutput(true);
+                //Escribir parametros
+                OutputStreamWriter out = new OutputStreamWriter(conexion.getOutputStream());
+                out.write(inmueble);
+                out.close();
+                //Leer respuesta
+                BufferedReader in = new BufferedReader(new InputStreamReader(
+                        conexion.getInputStream()));
+                String linea, todo = "";
+                while ((linea = in.readLine()) != null) {
+                    todo += linea + "\n";
+                }
+                in.close();
+                return todo;
+            } catch(Exception ex){
+                return ex.toString();
+            }
+        }
+
+        private String postFile(String url, String parametro, String archivo, String id){
+            String resultado="";
+            int status=0;
+            try {
+                //Conexión
+                URL peticion = new URL(url);
+                HttpURLConnection conexion = (HttpURLConnection) peticion.openConnection();
+                conexion.setDoOutput(true);
+                conexion.setRequestMethod("POST");
+                //Archivo
+                FileBody fileBody = new FileBody(new File(archivo));
+                MultipartEntity multipartEntity = new MultipartEntity(HttpMultipartMode.STRICT);
+                multipartEntity.addPart(parametro, fileBody);
+                multipartEntity.addPart("id", new StringBody(id));
+                conexion.setRequestProperty("Content-Type", multipartEntity.getContentType().getValue());
+                OutputStream out = conexion.getOutputStream();
+                try {
+                    multipartEntity.writeTo(out);
+                } catch(Exception ex){
+                    return ex.toString();
+                } finally {
+                    out.close();
+                }
+                BufferedReader in = new BufferedReader(new InputStreamReader(conexion.getInputStream()));
+                String decodedString;
+                while ((decodedString = in.readLine()) != null) {
+                    resultado+=decodedString+"\n";
+                }
+                in.close();
+                status = conexion.getResponseCode();
+            } catch (MalformedURLException ex) {
+                Log.v("ERROR", ex.toString());
+                return ex.toString();
+            } catch (IOException ex) {
+                Log.v("ERROR", ex.toString());
+                return ex.toString();
+            }
+            return resultado; //+"\n"+status;
+        }
+    }
 }

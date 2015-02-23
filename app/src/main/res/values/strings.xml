@@ -38,5 +38,6 @@
     <string name="tag_tipo">tipo</string>
     <string name="tag_precio">precio</string>
     <string name="tag_usuario">usuario</string>
+    <string name="inm_sync">El inmueble ya ha sido subido</string>
 
 </resources>

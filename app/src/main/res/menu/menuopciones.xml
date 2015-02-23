@@ -3,5 +3,8 @@
         android:title="Editar inmueble" />
 
     <item android:id="@+id/opBorrar"
-        android:title="Borrar inmueble" />
+    android:title="Borrar inmueble" />
+
+    <item android:id="@+id/opSubir"
+        android:title="Sincronizar inmueble" />
 </menu>

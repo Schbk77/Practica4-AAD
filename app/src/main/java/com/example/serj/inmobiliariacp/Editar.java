@@ -112,7 +112,7 @@ public class Editar extends Activity {
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_DCIM);
         File image = File.createTempFile(
                 imageFileName,                         /* nombre */
-                getString(R.string.extension),         /* extension */
+                getString(R.string.extension),                                /* extension */
                 storageDir                             /* ruta */
         );
         // Guarda el archivo

@@ -103,4 +103,12 @@ public class Inmueble implements Comparable<Inmueble>, Serializable {
     public int compareTo(Inmueble another) {
         return this.id-another.id;
     }
+
+    public String getInmueble(String usuario){
+        return "localidad=" + this.localidad + "&" +
+                "direccion=" + this.direccion + "&" +
+                "tipo=" + this.tipo + "&" +
+                "precio=" + this.precio + "&" +
+                "usuario=" + usuario;
+    }
 }
